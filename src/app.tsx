@@ -1,3 +1,4 @@
+// This code is a copy of https://github.com/BlafKing/spicetify-cat-jam-synced but with some modifications to make it work with the Raccoon-Wheel extension
 import { SettingsSection } from "spcr-settings";
 const settings = new SettingsSection("Raccoon-Wheel Settings", "raccoonwheel-settings");
 let audioData;
@@ -7,7 +8,7 @@ async function getPlaybackRate(audioData) {
     let videoDefaultBPM = Number(settings.getFieldValue("raccoonwheel-webm-bpm"));
     console.log(videoDefaultBPM);
     if (!videoDefaultBPM) {
-        videoDefaultBPM = 135.48;
+        videoDefaultBPM = 130
     }
 
     if (audioData && audioData?.track) {
@@ -24,11 +25,11 @@ async function getPlaybackRate(audioData) {
             playbackRate = bpmToUse / videoDefaultBPM;
         }
         console.log("[Raccoon-Wheel] Track BPM:", trackBPM)
-        console.log("[Raccoon-Wheel] Cat jam synchronized, playback rate set to:", playbackRate)
+        console.log("[Raccoon-Wheel] raccoon jam synchronized, playback rate set to:", playbackRate)
 
         return playbackRate; // Return the calculated playback rate
     } else {
-        console.warn("[Raccoon-Wheel] BPM data not available for this track, cat will not be jamming accurately :(");
+        console.warn("[Raccoon-Wheel] BPM data not available for this track, raccoon will not be jamming accurately :(");
         return 1; // Return default playback rate if BPM data is not available
     }
 }
@@ -106,18 +107,18 @@ async function waitForElement(selector, maxAttempts = 50, interval = 100) {
 // Function that creates the WebM video and sets initial BPM and play state
 async function createWebMVideo() {
     try {
-        const bottomPlayerClass = '.main-nowPlayingBar-right' // Selector for the bottom player
-        const leftLibraryClass = '.main-yourLibraryX-libraryItemContainer' // Selector for the left library
+        const bottomPlayerClass = '.main-nowPlayingWidget-coverArt' // Selector for the bottom player
+        const leftLibraryClass = '.main-nowPlayingView-coverArt' // Selector for covert art
         let leftLibraryVideoSize = Number(settings.getFieldValue("raccoonwheel-webm-position-left-size")); // Get the left library video size
         if (!leftLibraryVideoSize) {
             leftLibraryVideoSize = 100; // Default size of the video on the left library
         }
-        const bottomPlayerStyle = 'width: 65px; height: 65px;'; // Style for the bottom player video
-        let leftLibraryStyle = `width: ${leftLibraryVideoSize}%; max-width: 300px; height: auto; max-height: 100%; position: absolute; bottom: 0; pointer-events: none; z-index: 1;` // Style for the left library video
+        const bottomPlayerStyle = 'width: 100%; max-width: 65%; height: 100%;  position: absolute; z-index: 10;  pointer-events: none;'; // Style for the bottom player video
+        let leftLibraryStyle = `width: ${leftLibraryVideoSize}%; max-width: 300px; height: 100%; max-height: 100%; position: absolute; pointer-events: none; z-index: 10;` // Style for the left library video
         let selectedPosition = settings.getFieldValue("raccoonwheel-webm-position"); // Get the selected position for the video
 
-        let targetElementSelector = selectedPosition === 'Bottom (Player)' ? bottomPlayerClass : leftLibraryClass;
-        let elementStyles = selectedPosition === 'Bottom (Player)' ? bottomPlayerStyle : leftLibraryStyle;
+        let targetElementSelector = selectedPosition === 'Bottom' ? bottomPlayerClass : leftLibraryClass;
+        let elementStyles = selectedPosition === 'Bottom' ? bottomPlayerStyle : leftLibraryStyle;
         const targetElement = await waitForElement(targetElementSelector); // Wait until the target element is available
 
         // Remove any existing video element to avoid duplicates
@@ -130,7 +131,7 @@ async function createWebMVideo() {
         let videoURL = String(settings.getFieldValue("raccoonwheel-webm-link"));
         
         if (!videoURL) {
-            videoURL = "https://github.com/Nuzair46/spicetify-raccoon-wheel-synced/raw/main/src/resources/pedro.webm"
+            videoURL = "https://github.com/Nuzair46/spicetify-raccoon-wheel/raw/main/resources/pedro.webm"
         }
 
         // Create a new video element to be inserted
@@ -212,8 +213,13 @@ function calculateBetterBPM(danceability, energy, currentBPM) {
 
     console.log({danceabilityWeight, energyWeight, currentBPM, weightedAverage, betterBPM, bpmWeight})
 
+    const betterBPMForFasterSongs = settings.getFieldValue("raccoonwheel-webm-bpm-method-faster-songs") !== "Track BPM";
     if (betterBPM > currentBPM) {
-        betterBPM = (betterBPM + currentBPM) / 2;
+        if (betterBPMForFasterSongs){
+            betterBPM = (betterBPM + currentBPM) / 2;
+        } else {
+            betterBPM = currentBPM;
+        }
     }
 
     if (betterBPM < currentBPM) {
@@ -234,9 +240,10 @@ async function main() {
 
     // Create Settings UI
     settings.addInput("raccoonwheel-webm-link", "Custom webM video URL (Link does not work if no video shows)", "");
-    settings.addInput("raccoonwheel-webm-bpm", "Custom default BPM of webM video (Example: 135.48)", "");
-    settings.addDropDown("raccoonwheel-webm-position", "Position where webM video should be rendered", ['Bottom (Player)', 'Left (Library)'], 1);
-    settings.addDropDown("raccoonwheel-webm-bpm-method", "Method to calculate better BPM", ['Track BPM', 'Danceability, Energy and Track BPM'], 1);
+    settings.addInput("raccoonwheel-webm-bpm", "Custom default BPM of webM video (Example: 213)", "");
+    settings.addDropDown("raccoonwheel-webm-position", "Position where webM video should be rendered", ['Bottom', 'Main'], 1);
+    settings.addDropDown("raccoonwheel-webm-bpm-method", "Method to calculate better BPM for slower songs", ['Track BPM', 'Danceability, Energy and Track BPM'], 1);
+    settings.addDropDown("raccoonwheel-webm-bpm-method-faster-songs", "Method to calculate better BPM for faster songs", ['Track BPM', 'Danceability, Energy and Track BPM'], 1);
     settings.addInput("raccoonwheel-webm-position-left-size", "Size of webM video on the left library (Only works for left library, Default: 100)", "");
     settings.addButton("raccoonwheel-reload", "Reload custom values", "Save and reload", () => {createWebMVideo();});
     settings.pushSettings();
