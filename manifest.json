@@ -1,0 +1,9 @@
+[
+    {
+      "name": "Pedro Raccoon Synced",
+      "description": "Pedro the raccoon will dance in your cover art.",
+      "preview": "resources/pedro.gif",
+      "main": "dist/raccoon-wheel.js",
+      "readme": "README.md"
+    }
+]
