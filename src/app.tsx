@@ -108,6 +108,11 @@ async function waitForElement(selector, maxAttempts = 50, interval = 100) {
 // Function that creates the WebM video and sets initial BPM and play state
 async function createWebMVideo() {
     try {
+        // Remove any existing video element to avoid duplicates
+        const existingVideo = document.getElementById('raccoonwheel-webm');
+        if (existingVideo) {
+            existingVideo.remove();
+        }
         const bottomPlayerClass = '.main-nowPlayingWidget-coverArt' // Selector for the bottom player
         const mainCoverArtClass = '.cover-art-auto-height' // Selector for covert art
         let mainCoverArtVideoSize = Number(settings.getFieldValue("raccoonwheel-webm-position-left-size")); // Get the left library video size
@@ -121,14 +126,7 @@ async function createWebMVideo() {
         let targetElementSelector = selectedPosition === 'Bottom' ? bottomPlayerClass : mainCoverArtClass;
         let elementStyles = selectedPosition === 'Bottom' ? bottomPlayerStyle : mainCoverArtStyle;
         const targetElement = await waitForElement(targetElementSelector); // Wait until the target element is available
-
-        // Remove any existing video element to avoid duplicates
-        const existingVideo = document.getElementById('raccoonwheel-webm');
-        if (existingVideo) {
-            existingVideo.remove();
-        }
         
-        //
         let videoURL = String(settings.getFieldValue("raccoonwheel-webm-link"));
         
         if (!videoURL) {
