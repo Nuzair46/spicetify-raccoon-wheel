@@ -86,7 +86,8 @@ async function syncTiming(startTime, progress) {
             videoElement.pause(); // Pause the video if Spotify is not playing
         }
     } else {
-        console.error("[Raccoon-Wheel] Video element not found.");
+        createWebMVideo(); // Create a new video element if the current one is not found
+        console.error("[Raccoon-Wheel] Video element not found. Recreating...");
     }
 }
 
@@ -108,17 +109,17 @@ async function waitForElement(selector, maxAttempts = 50, interval = 100) {
 async function createWebMVideo() {
     try {
         const bottomPlayerClass = '.main-nowPlayingWidget-coverArt' // Selector for the bottom player
-        const leftLibraryClass = '.main-nowPlayingView-coverArt' // Selector for covert art
-        let leftLibraryVideoSize = Number(settings.getFieldValue("raccoonwheel-webm-position-left-size")); // Get the left library video size
-        if (!leftLibraryVideoSize) {
-            leftLibraryVideoSize = 100; // Default size of the video on the left library
+        const mainCoverArtClass = '.cover-art-auto-height' // Selector for covert art
+        let mainCoverArtVideoSize = Number(settings.getFieldValue("raccoonwheel-webm-position-left-size")); // Get the left library video size
+        if (!mainCoverArtVideoSize) {
+            mainCoverArtVideoSize = 100; // Default size of the video on the left library
         }
-        const bottomPlayerStyle = 'width: 100%; max-width: 65%; height: 100%;  position: absolute; z-index: 10;  pointer-events: none;'; // Style for the bottom player video
-        let leftLibraryStyle = `width: ${leftLibraryVideoSize}%; max-width: 300px; height: 100%; max-height: 100%; position: absolute; pointer-events: none; z-index: 10;` // Style for the left library video
+        const bottomPlayerStyle = 'width: 56px; height: 56px; position: absolute; z-index: 10;  pointer-events: none; left: 0;'; // Style for the bottom player video
+        let mainCoverArtStyle = `width: ${mainCoverArtVideoSize}%; position: absolute; pointer-events: none; z-index: 10;` // Style for the left library video
         let selectedPosition = settings.getFieldValue("raccoonwheel-webm-position"); // Get the selected position for the video
 
-        let targetElementSelector = selectedPosition === 'Bottom' ? bottomPlayerClass : leftLibraryClass;
-        let elementStyles = selectedPosition === 'Bottom' ? bottomPlayerStyle : leftLibraryStyle;
+        let targetElementSelector = selectedPosition === 'Bottom' ? bottomPlayerClass : mainCoverArtClass;
+        let elementStyles = selectedPosition === 'Bottom' ? bottomPlayerStyle : mainCoverArtStyle;
         const targetElement = await waitForElement(targetElementSelector); // Wait until the target element is available
 
         // Remove any existing video element to avoid duplicates
@@ -139,17 +140,18 @@ async function createWebMVideo() {
         videoElement.setAttribute('loop', 'true'); // Video loops continuously
         videoElement.setAttribute('autoplay', 'true'); // Video starts automatically
         videoElement.setAttribute('muted', 'true'); // Video is muted
-        videoElement.setAttribute('style', elementStyles);
         videoElement.src = videoURL; // Set the source of the video
         videoElement.id = 'raccoonwheel-webm'; // Assign an ID to the video element
+        videoElement.style.cssText = elementStyles;
 
         audioData = await fetchAudioData(); // Fetch audio data
         videoElement.playbackRate = await getPlaybackRate(audioData); // Adjust playback rate based on the song's BPM
         // Insert the video element into the target element in the DOM
-        if (targetElement.firstChild) {
-            targetElement.insertBefore(videoElement, targetElement.firstChild);
+        if (selectedPosition === 'Bottom') {
+            const firstChild = targetElement.firstChild
+            firstChild.insertBefore(videoElement, firstChild.firstChild);
         } else {
-            targetElement.appendChild(videoElement);
+            targetElement.insertBefore(videoElement, targetElement.firstChild);
         }
         // Control video playback based on whether Spotify is currently playing music
         if (Spicetify.Player.isPlaying()) {
@@ -297,7 +299,8 @@ async function main() {
                 videoElement.play(); // Play the video
             }
         } else {
-            console.error("[Raccoon-Wheel] Video element not found.");
+            createWebMVideo(); // Create a new video element if the current one is not found
+            console.error("[Raccoon-Wheel] Video element not found. Recreating...");
         }
     });
 }
