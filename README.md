@@ -1,16 +1,18 @@
-# Spicetify Creator
+# Pedro Raccoon Synced
 
-Spicetify Creator is a tool to compile modern Typescript/Javascript code to Spicetify extensions and custom apps.
+![preview](resources/pedro.gif)
 
-## Features
-- Typescript and React syntax
-- Import node packages
-- CSS/SCSS with PostCSS support
-- Extremely fast compile time with esbuild.
-- Plugins
+Pedro the raccoon will dance in your cover art.  
+Code inspired from [spicetify-cat-jam-synced](https://github.com/BlafKing/spicetify-cat-jam-synced)
 
-## Docs
-Check out [Spicetify's docs](https://spicetify.app/docs/development/spicetify-creator/the-basics)!
+# Changelog 📋
+
+<h3>v1.0</h3>
+
+- Initial release
+
+---
 
 ## Made with Spicetify Creator
+
 - https://github.com/spicetify/spicetify-creator
